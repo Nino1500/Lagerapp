@@ -226,6 +226,21 @@ public class DBController {
         }
         return null;
     }
+    public boolean deleteLoc(String location){
+        try {
+            deleteEntities(location);
+            openConnection();
+            String query = "delete from locations where location = ?";
+            PreparedStatement preparedStatement = getPreparedStatement(query);
+            preparedStatement.setString(1, location);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+            return true;
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     public boolean insertEntity(LEntity entity, String location){ //Object into database
         ArrayList<LEntity> list = new ArrayList<>();
@@ -246,11 +261,11 @@ public class DBController {
                     preparedStatement.setString(2, list.get(i).getEan());
                     preparedStatement.setString(3, location);
                     preparedStatement.executeUpdate();
-
-                    return true;
+                    preparedStatement.close();
                 } catch (SQLException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
+                return true;
             }
         }
         query = "INSERT INTO entities (ean, article, name, amount, location) VALUES (?, ?, ?, ?, ?)";
@@ -263,7 +278,6 @@ public class DBController {
             preparedStatement.setString(3, entity.getName());
             preparedStatement.setInt(4, entity.getAmount());
             preparedStatement.setString(5, entity.getLocation());
-
             preparedStatement.executeUpdate();
             preparedStatement.close();
 
@@ -278,27 +292,42 @@ public class DBController {
         ArrayList<LEntity> list = getEntities(location);
         int am = 0;
         for (int i = 0; i < list.size(); i++) {
-            if(list.get(i).getEan().equalsIgnoreCase(entity.getEan())){
+            if(list.get(i).getEan().equalsIgnoreCase(entity.getEan()) && list.get(i).getLocation().equalsIgnoreCase(location)){
                 am = list.get(i).getAmount();
+                if(am>=2){
+                    am--;
+                    query = "update entities set amount = ? where ean = ? AND location = ?";
+                    try {
+                        openConnection();
+                        PreparedStatement preparedStatement = getPreparedStatement(query);
+                        preparedStatement.setInt(1, am);
+                        preparedStatement.setString(2, list.get(i).getEan());
+                        preparedStatement.setString(3, location);
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        return true;
+                    } catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    query = "delete from entities where ean = ? AND location = ?";
+                    try {
+
+                        openConnection();
+                        PreparedStatement preparedStatement = getPreparedStatement(query);
+                        preparedStatement.setString(1, list.get(i).getEan());
+                        preparedStatement.setString(2, location);
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+
+                        return true;
+                    } catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
             }
-        }
-        if(am>=2){
-            am--;
-            query = "update entities set amount = "+am+" where ean = "+entity.getEan()+" AND location = "+location;
-        }
-        else {
-            query = "delete from entities where ean = "+entity.getEan()+" AND location = "+location;
-        }
-        try {
-
-            openConnection();
-            PreparedStatement preparedStatement = getPreparedStatement(query);
-            preparedStatement.executeUpdate();
-            preparedStatement.close();
-
-            return true;
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
         }
         return false;
     }

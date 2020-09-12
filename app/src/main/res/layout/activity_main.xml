@@ -13,7 +13,7 @@
         android:layout_width="410dp"
         android:layout_height="550dp"
         android:layout_marginStart="1dp"
-        android:layout_marginTop="180dp"
+        android:layout_marginTop="300dp"
         android:layout_marginEnd="1dp"
         android:layout_marginBottom="1dp"
         android:background="#A5A5A5"
@@ -24,8 +24,8 @@
 
     <Button
         android:id="@+id/scanbtn"
-        android:layout_width="186dp"
-        android:layout_height="43dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="210dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="210dp"
@@ -33,110 +33,135 @@
         android:backgroundTint="#4CAF50"
         android:text="Bereich scannen"
         app:layout_constraintBottom_toTopOf="@+id/listview"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.066"
+        app:layout_constraintEnd_toEndOf="@id/listview"
+        app:layout_constraintHorizontal_bias="0.178"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.035" />
 
     <RadioGroup
         android:id="@+id/radioGroup"
-        android:layout_width="141dp"
-        android:layout_height="167dp"
+        android:layout_width="135dp"
+        android:layout_height="194dp"
         android:layout_marginStart="1dp"
-        android:layout_marginTop="1dp"
         android:layout_marginEnd="30dp"
         android:layout_marginBottom="1dp"
         android:background="#FFFFFF"
         android:backgroundTint="#FFFFFF"
         app:layout_constraintBottom_toTopOf="@+id/listview"
         app:layout_constraintEnd_toStartOf="@+id/scanbtn"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <RadioButton
             android:id="@+id/newlocbtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
-            android:text="Bereich hinzufügen" />
+            android:text="ADD Bereich" />
 
         <RadioButton
             android:id="@+id/addbtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
-            android:text="hinzufügen" />
+            android:text="ADD" />
 
         <RadioButton
             android:id="@+id/deletebtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
-            android:text="löschen" />
+            android:text="DELETE" />
 
         <RadioButton
             android:id="@+id/deleteallbtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
-            android:text="Alle löschen" />
+            android:text="DELETE ALL" />
 
         <RadioButton
-            android:id="@+id/testbtn"
+            android:id="@+id/deletelocbtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
-            android:text="nichts" />
+            android:text="DELETE Bereich" />
+
+        <RadioButton
+            android:id="@+id/reloadbtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="RELOAD APP" />
     </RadioGroup>
 
     <EditText
         android:id="@+id/scannedean"
-        android:layout_width="220dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="21dp"
+        android:layout_width="184dp"
+        android:layout_height="47dp"
+        android:layout_marginStart="25dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="22dp"
         android:layout_marginBottom="11dp"
         android:ems="10"
         android:inputType="textPersonName"
+        android:text="Gescanntes Gerät"
         app:layout_constraintBottom_toTopOf="@+id/listview"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.136"
         app:layout_constraintStart_toEndOf="@+id/radioGroup"
         app:layout_constraintTop_toBottomOf="@+id/scanbtn"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.48" />
 
     <Button
         android:id="@+id/devicescanbtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="63dp"
-        android:layout_marginTop="13dp"
-        android:layout_marginEnd="35dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginStart="59dp"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="120dp"
         android:backgroundTint="#4CAF50"
         android:text="Gerät scannen"
         app:layout_constraintBottom_toTopOf="@+id/listview"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/radioGroup"
-        app:layout_constraintTop_toBottomOf="@+id/scannedean"
+        app:layout_constraintTop_toBottomOf="parent"
         app:layout_constraintVertical_bias="1.0" />
 
     <EditText
         android:id="@+id/countField"
         android:layout_width="74dp"
         android:layout_height="46dp"
-        android:layout_marginStart="5dp"
+        android:layout_marginStart="1dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginEnd="164dp"
         android:ems="10"
         android:inputType="textPersonName"
+        android:text="Stk."
         app:layout_constraintBottom_toTopOf="@+id/listview"
         app:layout_constraintEnd_toStartOf="@+id/devicescanbtn"
-        app:layout_constraintStart_toEndOf="@+id/radioGroup"
-        app:layout_constraintTop_toBottomOf="@+id/scannedean" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scannedean"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/articlesearchbtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="80dp"
+        android:layout_marginBottom="9dp"
+        android:backgroundTint="#4CAF50"
+        android:text="Gerät Suche"
+        app:layout_constraintBottom_toTopOf="@+id/listview"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scannedean"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
