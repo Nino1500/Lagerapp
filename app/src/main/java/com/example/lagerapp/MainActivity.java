@@ -1,19 +1,17 @@
 package com.example.lagerapp;
 
+import androidx.annotation.MainThread;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.provider.MediaStore;
-import android.provider.Settings;
 import android.text.InputType;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -23,6 +21,7 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.example.lagerapp.integration.android.IntentIntegrator;
 import com.example.lagerapp.integration.android.IntentResult;
@@ -31,18 +30,23 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Objects;
 
+/**
+ * Created by Nino Rinnerberger
+ */
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button scanBtn, devicescanbtn, articlesearchbtn;
-    private TextView contentTxt, countTxt;
+    private TextView contentTxt, countTxt, scannedean;
     private ListView listView;
     private RadioButton addbtn, deletebtn, deleteallbtn, newlocationbtn, deletelocbtn, reloadbtn;
     private boolean addC, deleteC, alldC, newlocC, scanF, scanS, deletelocC, reloadC, scanT;
     private String loadstring = "";
     Context context;
     static Context con;
-
+    private String articlesearchtxt;
+    AlertDialog.Builder builder;
+//JUST ADD FROM ADD AND RESOLVE FROM THERE FFS
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StrictMode.setThreadPolicy(policy);
 
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
             dbController.createTable();
             dbController.closeConnection();
         } catch (SQLException | ClassNotFoundException e) {
@@ -61,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         scanBtn = (Button) findViewById(R.id.scanbtn);
-        contentTxt = (TextView) findViewById(R.id.scannedean);
+        //contentTxt = (TextView) findViewById(R.id.scannedean);
         listView = findViewById(R.id.listview);
         addbtn = findViewById(R.id.addbtn);
         deletebtn = findViewById(R.id.deletebtn);
@@ -73,8 +77,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         deletelocbtn = findViewById(R.id.deletelocbtn);
         reloadbtn = findViewById(R.id.reloadbtn);
 
-        contentTxt.setTag(contentTxt.getKeyListener()); //making it uneditable
-        contentTxt.setKeyListener(null); //making it uneditable
+        //contentTxt.setTag(contentTxt.getKeyListener()); //making it uneditable //TODO: maybe remove
+        //contentTxt.setKeyListener(null); //making it uneditable
+
         countTxt.setTag(countTxt.getKeyListener());
         countTxt.setKeyListener(null);
 
@@ -86,7 +91,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         context = this;
         con=this;
 
+        builder = new AlertDialog.Builder(this);
+
         //TODO: TESTS FÜLLEN DER RESOLVE TABLE
+
 
     }
 
@@ -176,8 +184,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             scanS = false;
             scanF = false;
             scanT = true;
-            IntentIntegrator scanIntegrator = new IntentIntegrator(this);
-            scanIntegrator.initiateScan();
+            builder.setTitle("Artikelnummer: ");
+            final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+            builder.setPositiveButton("Los gehts", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    articlesearchtxt = input.getText().toString();
+                }
+            });
+            builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.show();
+            giveEntityLocations(articlesearchtxt);
         }
     }
 
@@ -186,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DBController dbController = null;
         try {
 
-            dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
 
             ArrayList<LEntity> list = dbController.getEntities(scanContent);
 
@@ -195,9 +219,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             int am = 0;
 
             for (int i = 0; i < list.size(); i++) {
-                stringArrayList.add("Artikel: " + list.get(i).getArticle() + " | Menge: " + list.get(i).getAmount());
-                am += list.get(i).getAmount();
-
+                if(list.get(i).getAmount()>0){
+                    stringArrayList.add("Artikel: " + list.get(i).getArticle() + " | Menge: " + list.get(i).getAmount());
+                    am += list.get(i).getAmount();
+                }
             }
 
             ListAdapter adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, stringArrayList);
@@ -217,20 +242,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @SuppressLint("SetTextI18n")
     public void giveEntityLocations(String entity){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
             ArrayList<LEntity> list = dbController.getEntities();
             ArrayList<String> listES = new ArrayList<>();
             int am = 0;
             for (int i = 0; i < list.size(); i++) {
-                if(Objects.equals(list.get(i).getEan(), entity)){
-                    listES.add("Artikel: "+list.get(i).getArticle()+" | Bereich: "+list.get(i).getLocation()+" | Menge: "+list.get(i).getAmount());
-                    am += list.get(i).getAmount();
+                if(Objects.equals(list.get(i).getArticle(), entity)){
+                    if(list.get(i).getAmount()>0){
+                        listES.add("Artikel: "+list.get(i).getArticle()+" | Bereich: "+list.get(i).getLocation()+" | Menge: "+list.get(i).getAmount());
+                        am += list.get(i).getAmount();
+                    }
                 }
             }
             ListAdapter adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listES);
             listView.setAdapter(adapter);
             if (list.size() > 0) {
                 countTxt.setText(" Stk: " + am);
+            }
+            else{
+                builder.setMessage("Dieser Artikel wurde nicht gefunden!");
+                builder.setCancelable(true);
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
             }
             dbController.closeConnection();
         } catch (SQLException | ClassNotFoundException e) {
@@ -240,16 +273,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newLoc() {
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
             if (dbController.insertLocation(loadstring)) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage("Erfolgreich den Bereich erstellt!");
                 builder.setCancelable(true);
                 AlertDialog alert = builder.create();
                 alert.show();
                 dbController.closeConnection();
             } else {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage("Diesen Bereich gibt es schon!");
                 builder.setCancelable(true);
                 AlertDialog alert = builder.create();
@@ -263,11 +294,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void alldelete() {
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
 
             dbController.deleteEntities(loadstring);
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("Erfolgreich gelöscht!");
             builder.setCancelable(true);
             AlertDialog alert = builder.create();
@@ -282,47 +312,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public String[] addDecision(){
-        final String[] arr = new String[2];
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Auswahl zum Hinzufügen:");
-        final EditText input = new EditText(context);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-        builder.setPositiveButton("Anzahl des selben Geräts", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                arr[0] = input.getText().toString();
-                arr[1] = "same";
-            }
-        });
-        builder.setNegativeButton("Anzahl von verschiedenen Geräten", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                arr[0] = input.getText().toString();
-                arr[1] = "diff";
-            }
-        });
-        builder.setCancelable(true);
-
-        builder.show();
-        return arr;
-    }
-
     public void addEnt(String scanContent) {
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
 
-            //String[] arr = addDecision();
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand",this);
 
-            String name = dbController.resolveName(scanContent);
-            String article = dbController.resolveEAN(scanContent);
+            dbController.insertEntity(new LEntity(scanContent, "", "", 1, loadstring), loadstring);
 
-            dbController.insertEntity(new LEntity(scanContent, article, name, 1, loadstring), loadstring);
-
-            updateList(loadstring);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateList(loadstring);
+                }
+            });
 
             dbController.closeConnection();
+
+            IntentIntegrator scanIntegrator = new IntentIntegrator(this);
+            scanIntegrator.initiateScan();
+
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -331,16 +339,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void deleteEnt(String scanContent) {
 
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
 
-            String name = dbController.resolveName(scanContent);
-            String article = dbController.resolveEAN(scanContent);
-
-            dbController.deleteEntity(new LEntity(scanContent, article, name, 1, loadstring), loadstring);
+            dbController.deleteEntity(new LEntity(scanContent, "", "", 1, loadstring), loadstring);
 
             updateList(loadstring);
 
             dbController.closeConnection();
+
+            IntentIntegrator scanIntegrator = new IntentIntegrator(this);
+            scanIntegrator.initiateScan();
 
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -349,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     public boolean checkExistLoc(String location){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
             ArrayList<String> list = dbController.getLocations();
             if(list.contains(location)){
                 dbController.closeConnection();
@@ -366,7 +374,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     public boolean deleteLocation(String location){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand");
+            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
             dbController.deleteLoc(location);
             dbController.closeConnection();
             updateList(loadstring);
@@ -385,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (scanningResult != null) {
 
-            String scanContent = scanningResult.getContents();
+            final String scanContent = scanningResult.getContents();
             String scanFormat = scanningResult.getFormatName();
             if(scanContent != null){
                 if (scanF) {
@@ -408,7 +416,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 newLoc();
                             }
                             else {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(this);
                                 builder.setMessage("Diesen Bereich gibt es noch nicht!");
                                 builder.setCancelable(true);
                                 AlertDialog alert = builder.create();
@@ -418,7 +425,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     }
                     else {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         builder.setMessage("Bitte Format = CODE_128 scannen!");
                         builder.setCancelable(true);
                         AlertDialog alert = builder.create();
@@ -431,7 +437,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if(scanFormat.equalsIgnoreCase("EAN_13")){
 
                         if (addC) {
-                            addEnt(scanContent);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    addEnt(scanContent);
+                                }
+                            }).start();
                         }
                         if (deleteC) {
                             deleteEnt(scanContent);
@@ -439,21 +450,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     }
                     else{
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setMessage("Bitte Format = EAN_13 scannen!");
+                        builder.setMessage("Bitte Format = EAN_13 scannen!"+scanFormat);
                         builder.setCancelable(true);
                         AlertDialog alert = builder.create();
                         alert.show();
                     }
 
                 }
-                if(scanT){
-                    if(scanFormat.equalsIgnoreCase("EAN_13")){
-                        giveEntityLocations(scanContent);
-                    }
-                }
-                if (scanS && loadstring.equalsIgnoreCase("") && !scanT) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                if (scanS && loadstring.equalsIgnoreCase("")) {
                     builder.setMessage("Zuerst den Bereich einscannen!");
                     builder.setCancelable(true);
                     AlertDialog alert = builder.create();

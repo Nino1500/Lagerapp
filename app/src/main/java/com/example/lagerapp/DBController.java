@@ -1,5 +1,11 @@
 package com.example.lagerapp;
 
+import android.content.Context;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -20,19 +26,20 @@ public class DBController {
     private String host;
     private int port;
     private String database;
-
+    private Context context;
     private ResultSet resultSet;
 
     private Connection connection;
 
 
 
-    public DBController(String user, String pass, String host, int port, String database) throws SQLException, ClassNotFoundException {
+    public DBController(String user, String pass, String host, int port, String database, Context context) throws SQLException, ClassNotFoundException {
         this.user = user;
         this.pass = pass;
         this.host = host;
         this.port = port;
         this.database = database;
+        this.context = context;
         openConnection();
     }
 
@@ -107,7 +114,7 @@ public class DBController {
         return connection;
     }
 
-    public void createTable(){
+    public void createTable(){ //TODO: ARTICLE is not necc now because fo resolve method so delete it ffs
         String query = "CREATE TABLE IF NOT EXISTS entities (ean VARCHAR(20), article VARCHAR(40), name VARCHAR(40), amount INTEGER, location VARCHAR(40))";
         try {
             openConnection();
@@ -116,14 +123,14 @@ public class DBController {
             preparedStatement.execute();
             preparedStatement.close();
 
-            query = "CREATE TABLE IF NOT EXISTS resolve (ean VARCHAR(40), article VARCHAR(40), name VARCHAR(40))";
+            /*query = "CREATE TABLE IF NOT EXISTS resolve (ean VARCHAR(40), article VARCHAR(40), name VARCHAR(40))";
 
             openConnection();
 
             //statement = connection.createStatement();
             preparedStatement = getPreparedStatement(query);
             preparedStatement.execute();
-            preparedStatement.close();
+            preparedStatement.close();*/
 
             query = "CREATE TABLE IF NOT EXISTS locations (location VARCHAR(40))";
 
@@ -136,49 +143,6 @@ public class DBController {
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    public String resolveEAN(String ean){ //Through EAN you can get the articlenumber from database
-        String query = "select * from resolve";
-
-        try {
-            openConnection();
-
-            PreparedStatement preparedStatement = getPreparedStatement(query);
-            resultSet = preparedStatement.executeQuery();
-
-
-            while(resultSet.next()){
-                if(resultSet.getString("ean").equalsIgnoreCase(ean)){
-                    return resultSet.getString("article");
-                }
-            }
-            preparedStatement.close();
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-    public String resolveName(String ean){
-
-        String query = "select * from resolve";
-
-        try {
-            openConnection();
-
-            PreparedStatement preparedStatement = getPreparedStatement(query);
-            resultSet = preparedStatement.executeQuery();
-
-            while(resultSet.next()){
-                if(resultSet.getString("ean").equalsIgnoreCase(ean)){
-                    return resultSet.getString("name");
-                }
-            }
-            preparedStatement.close();
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return "";
     }
 
     public boolean insertLocation(String location){
@@ -205,6 +169,7 @@ public class DBController {
         }
         return false;
     }
+
     public ArrayList<String> getLocations(){
         String query = "SELECT * FROM locations";
 
@@ -245,7 +210,43 @@ public class DBController {
     public boolean insertEntity(LEntity entity, String location){ //Object into database
         ArrayList<LEntity> list = new ArrayList<>();
 
-        String query = "";
+        String query = "select * from entities";
+
+        boolean hasArt = false;
+        PreparedStatement preparedStatement = null;
+        try {
+            openConnection();
+            preparedStatement = getPreparedStatement(query);
+            preparedStatement.executeQuery();
+            resultSet = preparedStatement.getResultSet();
+            while (resultSet.next()){
+                if(resultSet.getString("ean").equalsIgnoreCase(entity.getEan()) && !resultSet.getString("article").equalsIgnoreCase("")){
+                    hasArt=true;
+                    break;
+                }
+            }
+            preparedStatement.close();
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        if(!hasArt){
+            try {
+                BufferedReader reader = null;
+                reader = new BufferedReader(new InputStreamReader(context.getAssets().open("EAN.TXT"), StandardCharsets.UTF_8));
+                String mLine;
+                while((mLine = reader.readLine()) != null){
+                    String[] splits = mLine.split("    ");
+                    if(splits.length>1){
+                        if(splits[0].equalsIgnoreCase(entity.getEan())){
+                            entity.setArticle(splits[1]);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         list = getEntities(location);
 
@@ -254,7 +255,7 @@ public class DBController {
                 query = "update entities set amount = ? where ean = ? AND location = ?";
                 try {
                     openConnection();
-                    PreparedStatement preparedStatement = getPreparedStatement(query);
+                    preparedStatement = getPreparedStatement(query);
                     int am = list.get(i).getAmount();
                     am++;
                     preparedStatement.setInt(1, am);
@@ -272,7 +273,7 @@ public class DBController {
         try {
             openConnection();
 
-            PreparedStatement preparedStatement = getPreparedStatement(query);
+            preparedStatement = getPreparedStatement(query);
             preparedStatement.setString(1, entity.getEan());
             preparedStatement.setString(2, entity.getArticle());
             preparedStatement.setString(3, entity.getName());
@@ -287,7 +288,7 @@ public class DBController {
         }
         return false;
     }
-    public boolean deleteEntity(LEntity entity, String location){ //Object delete in Database
+    public boolean deleteEntity(LEntity entity, String location){
         String query = "";
         ArrayList<LEntity> list = getEntities(location);
         int am = 0;
@@ -310,17 +311,16 @@ public class DBController {
                         e.printStackTrace();
                     }
                 }
-                else {
-                    query = "delete from entities where ean = ? AND location = ?";
+                if(am==1){
+                    query = "update entities set amount = ? where ean = ? AND location = ?";
                     try {
-
                         openConnection();
                         PreparedStatement preparedStatement = getPreparedStatement(query);
-                        preparedStatement.setString(1, list.get(i).getEan());
-                        preparedStatement.setString(2, location);
+                        preparedStatement.setInt(1, 0);
+                        preparedStatement.setString(2, list.get(i).getEan());
+                        preparedStatement.setString(3, location);
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
-
                         return true;
                     } catch (SQLException | ClassNotFoundException e) {
                         e.printStackTrace();
