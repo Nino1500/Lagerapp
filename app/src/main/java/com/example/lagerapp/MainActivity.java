@@ -34,6 +34,8 @@ import java.util.Objects;
  * Created by Nino Rinnerberger
  */
 
+// TODO: Make it fancier, easier, understandble, comment stuff
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button scanBtn, devicescanbtn, articlesearchbtn;
@@ -46,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     static Context con;
     private String articlesearchtxt;
     AlertDialog.Builder builder;
-//JUST ADD FROM ADD AND RESOLVE FROM THERE FFS
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StrictMode.setThreadPolicy(policy);
 
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this); //Split for other methods or smth
             dbController.createTable();
             dbController.closeConnection();
         } catch (SQLException | ClassNotFoundException e) {
@@ -210,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DBController dbController = null;
         try {
 
-            dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
 
             ArrayList<LEntity> list = dbController.getEntities(scanContent);
 
@@ -242,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @SuppressLint("SetTextI18n")
     public void giveEntityLocations(String entity){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
             ArrayList<LEntity> list = dbController.getEntities();
             ArrayList<String> listES = new ArrayList<>();
             int am = 0;
@@ -273,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newLoc() {
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
             if (dbController.insertLocation(loadstring)) {
                 builder.setMessage("Erfolgreich den Bereich erstellt!");
                 builder.setCancelable(true);
@@ -294,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void alldelete() {
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
 
             dbController.deleteEntities(loadstring);
 
@@ -315,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void addEnt(String scanContent) {
         try {
 
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand",this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
 
             dbController.insertEntity(new LEntity(scanContent, "", "", 1, loadstring), loadstring);
 
@@ -339,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void deleteEnt(String scanContent) {
 
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
 
             dbController.deleteEntity(new LEntity(scanContent, "", "", 1, loadstring), loadstring);
 
@@ -357,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     public boolean checkExistLoc(String location){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
             ArrayList<String> list = dbController.getLocations();
             if(list.contains(location)){
                 dbController.closeConnection();
@@ -374,7 +375,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     public boolean deleteLocation(String location){
         try {
-            DBController dbController = new DBController("lagerbestand", "nwKHYVhSakav9eVO", "49.12.124.252", 3306, "lagerbestand", this);
+            DBController dbController = new DBController("test", "test123", "12.12.12.12", 3306, "test", this);
             dbController.deleteLoc(location);
             dbController.closeConnection();
             updateList(loadstring);
